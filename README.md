@@ -6,11 +6,14 @@ This is an replacement but morely an improvement to my previous bot that was hor
 
 [Example of usage](https://github.com/Vaultpls/Gwitch/tree/master/example)
 
+### Chat Data
+*METHOD* - States if it were a JOIN/MESSAGE/etc
+*Username* - States the referenced users name
+*Message* - States the message received if MESSAGE was the METHOD
 
 ## TODO
-	* JOIN/PART read
-	* HOST read
-	* Others to come
+* Twitch custom commands
+* Others to come
 
 ## Resources
 	* https://github.com/justintv/Twitch-API/blob/master/IRC.md
