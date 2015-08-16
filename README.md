@@ -7,9 +7,12 @@ This is an replacement but morely an improvement to my previous bot that was hor
 [Example of usage](https://github.com/Vaultpls/Gwitch/tree/master/example)
 
 ### Chat Data
-*METHOD* - States if it were a JOIN/MESSAGE/etc
-*Username* - States the referenced users name
-*Message* - States the message received if MESSAGE was the METHOD
+
+**METHOD** - States if it were a JOIN/MESSAGE/etc
+
+**Username** - States the referenced users name
+
+**Message** - States the message received if MESSAGE was the METHOD
 
 ## TODO
 * Twitch custom commands
