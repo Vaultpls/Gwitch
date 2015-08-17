@@ -78,16 +78,17 @@ func (chat *TwitchChat) RawRead() (data string, err error) {
 	}
 }
 
-func (chat *TwitchChat) ReadData() (data *Data, err error) { //Here comes some spaghetti, let's hope someone or myself will make this non-trashy
+func (chat *TwitchChat) ReadData() (data *Data) { //Here comes some spaghetti, let's hope someone or myself will make this non-trashy
 	var rawdata string
 	var formattedstring string
+	var err error
 
 	for {
 
 		rawdata, err = chat.RawRead()
 
 		if err != nil {
-			return &Data{"ERROR", "", ""}, err
+			return &Data{"ERROR", "", ""}
 		}
 
 		formattedstring = fmt.Sprintf(".tmi.twitch.tv PRIVMSG %s :", chat.Channel)
