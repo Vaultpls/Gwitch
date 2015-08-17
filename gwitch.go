@@ -56,16 +56,15 @@ func (chat *TwitchChat) SendMessage(data string) (err error) {
 	return
 }
 
-func (chat *TwitchChat) RawRead() (data string, err error) {
-	var line string
+func (chat *TwitchChat) RawRead() (data string) {
 	reader := bufio.NewReader(chat.Conn)
 	tp := textproto.NewReader(reader)
 
 	for {
-		line, err = tp.ReadLine()
+		line, err := tp.ReadLine()
 
 		if err != nil {
-			return "", err
+			return ""
 		}
 
 		if strings.HasPrefix(line, "PING") {
@@ -81,13 +80,12 @@ func (chat *TwitchChat) RawRead() (data string, err error) {
 func (chat *TwitchChat) ReadData() (data *Data) { //Here comes some spaghetti, let's hope someone or myself will make this non-trashy
 	var rawdata string
 	var formattedstring string
-	var err error
 
 	for {
 
-		rawdata, err = chat.RawRead()
+		rawdata = chat.RawRead()
 
-		if err != nil {
+		if rawdata == "" {
 			return &Data{"ERROR", "", ""}
 		}
 
