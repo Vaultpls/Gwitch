@@ -15,7 +15,7 @@ func main() {
 
 	for {
 
-		data, err := t.ReadData()
+		data := t.ReadData()
 
 		if err != nil{
 			panic(err)
