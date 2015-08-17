@@ -15,12 +15,14 @@ func main() {
 
 	for {
 
-		data := t.ReadData()
+		data, err := t.ReadData()
+
+		if err != nil{
+			panic(err)
+		}
 
 		if data.Method == "MESSAGE" && data.Message == "!hi" {
-
 			t.SendMessage("Hi " + data.Username + "!  I am " + t.Username + "!")
-
 		}
 
 		switch {
