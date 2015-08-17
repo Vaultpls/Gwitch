@@ -102,15 +102,15 @@ func (chat *TwitchChat) ReadData() (data *Data) { //Here comes some spaghetti, l
 				return
 			}
 
-		case strings.Contains(rawdata, ".tmi.twitch.tv JOIN %s"+chat.Channel):
-			tempstring1 := strings.Split(rawdata, ".tmi.twitch.tv JOIN %s"+chat.Channel)
+		case strings.Contains(rawdata, ".tmi.twitch.tv JOIN "+chat.Channel):
+			tempstring1 := strings.Split(rawdata, ".tmi.twitch.tv JOIN "+chat.Channel)
 			tempstring2 := strings.Split(tempstring1[0], "@")
 
 			data = &Data{"JOIN", tempstring2[1], ""}
 			return
 
-		case strings.Contains(rawdata, ".tmi.twitch.tv PART %s"+chat.Channel):
-			tempstring1 := strings.Split(rawdata, ".tmi.twitch.tv PART %s"+chat.Channel)
+		case strings.Contains(rawdata, ".tmi.twitch.tv PART "+chat.Channel):
+			tempstring1 := strings.Split(rawdata, ".tmi.twitch.tv PART "+chat.Channel)
 			tempstring2 := strings.Split(tempstring1[0], "@")
 
 			data = &Data{"PART", tempstring2[1], ""}
