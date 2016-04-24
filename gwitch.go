@@ -9,46 +9,60 @@ import (
 	"unicode/utf8"
 )
 
+//TwitchChat containing Username, OAuth, Channel, Conn, and RawData necessary for connection
 type TwitchChat struct {
 	Username string
 	OAuth    string
 	Channel  string
 	Conn     net.Conn
+	RawData string
 }
 
+//Data containing Method, Username, and Message
 type Data struct {
 	Method   string
 	Username string
 	Message  string
 }
 
+//New Gwitch instance
 func New(user string, oauth string, channel string, conn net.Conn) (UI *TwitchChat) {
-	UI = &TwitchChat{user, oauth, channel, conn}
+	UI = &TwitchChat{user, oauth, channel, conn, ""}
 	return
 }
 
+//Connect to the Twitch IRC servers
 func (chat *TwitchChat) Connect() (err error) {
 	chat.Conn, err = net.Dial("tcp", "irc.twitch.tv:6667")
-
+	
+	//SendRawData standard user info
 	chat.SendRawData("PASS " + chat.OAuth)
 	chat.SendRawData("NICK " + chat.Username)
 	chat.SendRawData("JOIN " + chat.Channel)
 
+	//SendRawData to request the ability to have IRCV3 and membership updates(JOIN & PART)
+	chat.SendRawData("CAP REQ :twitch.tv/membership")
+    chat.SendRawData("CAP REQ :twitch.tv/commands")
+
+
 	return
 }
 
+//Close the connection
 func (chat *TwitchChat) Close() (err error) {
 	err = chat.Conn.Close()
 
 	return
 }
 
+//SendRawData send raw data to the Twitch server
 func (chat *TwitchChat) SendRawData(data string) (err error) {
 	_, err = fmt.Fprintf(chat.Conn, "%s\r\n", data)
 
 	return
 }
 
+//SendMessage sends message to chat using SendRawData
 func (chat *TwitchChat) SendMessage(data string) (err error) {
 	message := fmt.Sprintf(":%s!%s@%s.tmi.twitch.tv PRIVMSG %s :%s", chat.Username, chat.Username, chat.Username, chat.Channel, data)
 	err = chat.SendRawData(message)
@@ -56,6 +70,7 @@ func (chat *TwitchChat) SendMessage(data string) (err error) {
 	return
 }
 
+//RawRead reads raw data from conn from TwitchChat
 func (chat *TwitchChat) RawRead() (data string) {
 	reader := bufio.NewReader(chat.Conn)
 	tp := textproto.NewReader(reader)
@@ -77,15 +92,15 @@ func (chat *TwitchChat) RawRead() (data string) {
 	}
 }
 
+//ReadData directly from RawData, interprets if is join, part, message, op, and de-op
 func (chat *TwitchChat) ReadData() (data *Data) { //Here comes some spaghetti, let's hope someone or myself will make this non-trashy
-	var rawdata string
 	var formattedstring string
 
 	for {
 
-		rawdata = chat.RawRead()
+		chat.RawData = chat.RawRead()
 
-		if rawdata == "" {
+		if chat.RawData == "" {
 			return &Data{"ERROR", "", ""}
 		}
 
@@ -93,35 +108,35 @@ func (chat *TwitchChat) ReadData() (data *Data) { //Here comes some spaghetti, l
 
 		switch {
 
-		case strings.Contains(rawdata, formattedstring):
-			tempstring1 := strings.Split(rawdata, formattedstring)
+		case strings.Contains(chat.RawData, formattedstring):
+			tempstring1 := strings.Split(chat.RawData, formattedstring)
 			tempstring2 := strings.Split(tempstring1[0], "@")
 
 			if tempstring2[1] != chat.Username { //A quick fix to ignore messages created by self
-				data = &Data{"MESSAGE", tempstring2[1], tempstring1[1]}
+				data = &Data{"MESSAGE", strings.ToLower(tempstring2[1]), tempstring1[1]}
 				return
 			}
 
-		case strings.Contains(rawdata, ".tmi.twitch.tv JOIN "+chat.Channel):
-			tempstring1 := strings.Split(rawdata, ".tmi.twitch.tv JOIN "+chat.Channel)
+		case strings.Contains(chat.RawData, ".tmi.twitch.tv JOIN "+chat.Channel):
+			tempstring1 := strings.Split(chat.RawData, ".tmi.twitch.tv JOIN "+chat.Channel)
 			tempstring2 := strings.Split(tempstring1[0], "@")
 
-			data = &Data{"JOIN", tempstring2[1], ""}
+			data = &Data{"JOIN", strings.ToLower(tempstring2[1]), ""}
 			return
 
-		case strings.Contains(rawdata, ".tmi.twitch.tv PART "+chat.Channel):
-			tempstring1 := strings.Split(rawdata, ".tmi.twitch.tv PART "+chat.Channel)
+		case strings.Contains(chat.RawData, ".tmi.twitch.tv PART "+chat.Channel):
+			tempstring1 := strings.Split(chat.RawData, ".tmi.twitch.tv PART "+chat.Channel)
 			tempstring2 := strings.Split(tempstring1[0], "@")
 
-			data = &Data{"PART", tempstring2[1], ""}
+			data = &Data{"PART", strings.ToLower(tempstring2[1]), ""}
 			return
 
-		case strings.HasPrefix(rawdata, ":jtv MODE "+chat.Channel+" +o "):
-			data = &Data{"GAINOP", rawdata[14+utf8.RuneCountInString(chat.Channel):], ""}
+		case strings.HasPrefix(chat.RawData, ":jtv MODE "+chat.Channel+" +o "):
+			data = &Data{"GAINOP", chat.RawData[14+utf8.RuneCountInString(chat.Channel):], ""}
 			return
 
-		case strings.HasPrefix(rawdata, ":jtv MODE "+chat.Channel+" -o "):
-			data = &Data{"LOSEOP", rawdata[14+utf8.RuneCountInString(chat.Channel):], ""}
+		case strings.HasPrefix(chat.RawData, ":jtv MODE "+chat.Channel+" -o "):
+			data = &Data{"LOSEOP", chat.RawData[14+utf8.RuneCountInString(chat.Channel):], ""}
 			return
 		}
 
